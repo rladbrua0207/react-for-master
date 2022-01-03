@@ -1,0 +1,6 @@
+/ -> All coins
+/:id -> /btc -> coin Detail
+
+/btc/information 
+/btc/chart
+=> Nested Router
