@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { faArrowCircleLeft } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Helmet, HelmetProvider } from "react-helmet-async";
+import { useQuery } from "react-query";
 import {
   Link,
   Route,
-  RouteProps,
   Routes,
   useLocation,
   useMatch,
   useParams,
 } from "react-router-dom";
 import styled from "styled-components";
+import { fetchCoinInfo, fetchCoinTickers } from "../api";
 import Chart from "./Chart";
 import Price from "./Price";
 
@@ -84,6 +87,14 @@ const Tab = styled.span<{ isActive: boolean }>`
   }
 `;
 
+const PrevBtn = styled.div`
+  position: sticky;
+  top: 7.5%;
+  margin-left: 10px;
+  font-size: 2rem;
+  color: ${(props) => props.theme.textColor};
+`;
+
 interface IInfoData {
   id: string;
   name: string;
@@ -119,7 +130,7 @@ interface IPriceData {
   quotes: {
     USD: {
       ath_date: string;
-      ath_price: 68692.137036932;
+      ath_price: number;
       market_cap: number;
       market_cap_change_24h: number;
       percent_change_1h: number;
@@ -139,38 +150,65 @@ interface IPriceData {
   };
 }
 
+type IParams = {
+  coinId: string;
+};
+
 function Coin() {
-  const [loading, setLoading] = useState(true);
-  const { coinId } = useParams();
-  const [info, setInfo] = useState<IInfoData>();
-  const [priceInfo, setPriceInfo] = useState<IPriceData>();
-  //const {state: { name }} = useLocation() as RouteState;
+  const { coinId } = useParams() as IParams;
   const state = useLocation().state as RouteState;
   const priceMatch = useMatch("/:coinId/price");
   const chartMatch = useMatch("/:coinId/chart");
-  //match가 우리가 coinId/price 라는 URL에 있는지 확인
-  console.log(priceMatch);
-  useEffect(() => {
-    (async () => {
-      const infoData = await (
-        await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)
-      ).json();
-      const priceData = await (
-        await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)
-      ).json();
-      setInfo(infoData);
-      setPriceInfo(priceData);
-      setLoading(false);
-    })();
-  }, []);
-  console.log(info);
-  console.log(priceInfo);
+  const { isLoading: infoLoading, data: infoData } = useQuery<IInfoData>(
+    ["info", coinId],
+    () => fetchCoinInfo(coinId)
+  );
+  const { isLoading: tickersLoading, data: tickersData } = useQuery<IPriceData>(
+    ["tickers", coinId],
+    () => fetchCoinTickers(coinId),
+    {
+      refetchInterval: 5000,
+    }
+  );
 
+  //match가 우리가 coinId/price 라는 URL에 있는지 확인
+
+  // const [info, setInfo] = useState<IInfoData>();
+  // const [loading, setLoading] = useState(true);
+  // const [priceInfo, setPriceInfo] = useState<IPriceData>();
+  //const {state: { name }} = useLocation() as RouteState;
+  // useEffect(() => {
+  //   (async () => {
+  //     const infoData = await (
+  //       await fetch(`https://api.coinpaprika.com/v1/coins/${coinId}`)
+  //     ).json();
+  //     const priceData = await (
+  //       await fetch(`https://api.coinpaprika.com/v1/tickers/${coinId}`)
+  //     ).json();
+  //     setInfo(infoData);
+  //     setPriceInfo(priceData);
+  //     setLoading(false);
+  //   })();
+  // }, []);
+  const loading = infoLoading || tickersLoading;
+  console.log(tickersData);
   return (
     <Container>
+      <HelmetProvider>
+        <Helmet>
+          <title>
+            {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
+          </title>
+        </Helmet>
+      </HelmetProvider>
+      <PrevBtn>
+        <Link to={"/"}>
+          <FontAwesomeIcon icon={faArrowCircleLeft} />
+        </Link>
+      </PrevBtn>
       <Header>
         <Title>
-          {state?.name ? state.name : loading ? "Loading..." : info?.name}
+          {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
         </Title>
       </Header>
       {loading ? (
@@ -180,31 +218,31 @@ function Coin() {
           <Overview>
             <OverviewItem>
               <span>Rank:</span>
-              <span>{info?.rank}</span>
+              <span>{infoData?.rank}</span>
             </OverviewItem>
             <OverviewItem>
               <span>Symbol:</span>
-              <span>${info?.symbol}</span>
+              <span>${infoData?.symbol}</span>
             </OverviewItem>
             <OverviewItem>
-              <span>Open Source:</span>
-              <span>{info?.open_source ? "Yes" : "No"}</span>
+              <span>Price:</span>
+              <span>{tickersData?.quotes.USD.price.toFixed(3)}</span>
             </OverviewItem>
           </Overview>
-          <Description>{info?.description}</Description>
+          <Description>{infoData?.description}</Description>
           <Overview>
             <OverviewItem>
               <span>Total Suply:</span>
-              <span>{priceInfo?.total_supply}</span>
+              <span>{tickersData?.total_supply}</span>
             </OverviewItem>
             <OverviewItem>
               <span>Max Supply:</span>
-              <span>{priceInfo?.max_supply}</span>
+              <span>{tickersData?.max_supply}</span>
             </OverviewItem>
           </Overview>
           <Tabs>
             <Tab isActive={chartMatch !== null}>
-              <Link to={`/${coinId}/chart`}>Chart </Link>
+              <Link to={`/${coinId}/chart`}>Chart</Link>
             </Tab>
             <Tab isActive={priceMatch !== null}>
               <Link to={`/${coinId}/price`}>Price</Link>
@@ -212,8 +250,11 @@ function Coin() {
           </Tabs>
 
           <Routes>
-            <Route path={`price`} element={<Price />}></Route>
-            <Route path={`chart`} element={<Chart />}></Route>
+            <Route
+              path={`price`}
+              element={<Price usd={tickersData?.quotes.USD} />}
+            ></Route>
+            <Route path={`chart`} element={<Chart coinId={coinId} />}></Route>
           </Routes>
         </>
       )}
