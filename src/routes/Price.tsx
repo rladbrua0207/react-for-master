@@ -21,9 +21,9 @@ interface IExchange {
 interface IPrice {
   [exchange: string]: IExchange | undefined;
 }
-
+//usd를 키값으로 갖고,IExchange인터페이스를 value로 가지고있는 객체
 function Price({ usd }: IPrice) {
-  return <h1>{usd?.ath_date}</h1>;
+  return <h1>{usd?.percent_change_1y}</h1>;
 }
 
 export default Price;
