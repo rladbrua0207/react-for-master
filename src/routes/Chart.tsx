@@ -2,10 +2,6 @@ import { useQuery } from "react-query";
 import { fetchCoinHistory } from "../api";
 import ApexChart from "react-apexcharts";
 
-interface ChartProps {
-  coinId: string;
-}
-
 interface IHistorical {
   time_open: string;
   time_close: string;
@@ -17,6 +13,9 @@ interface IHistorical {
   market_cap: number;
 }
 
+interface ChartProps {
+  coinId: string;
+}
 function Chart({ coinId }: ChartProps) {
   const { isLoading, data } = useQuery<IHistorical[]>(
     ["ohlcv", coinId],
@@ -24,59 +23,66 @@ function Chart({ coinId }: ChartProps) {
     { refetchInterval: 5000 } //5초마다 refetch
   );
   //ohlcv: open, high, low, close, volume
+  const options: ApexCharts.ApexOptions = {
+    theme: {
+      mode: "dark",
+    },
+    chart: {
+      height: 400,
+      type: "candlestick",
+    },
+    grid: { show: false },
+    xaxis: {
+      type: "datetime",
+      labels: {
+        show: false,
+      },
+      categories: data?.map((val) => val.time_close),
+      axisTicks: { show: false },
+      axisBorder: { show: false },
+    },
+    yaxis: {
+      show: false,
+    },
+    title: {
+      text: `${coinId.toUpperCase()} Chart`,
+      align: "left",
+    },
+    tooltip: {
+      y: {
+        formatter: (value) => `$${value.toFixed(2)}`,
+      },
+    },
+    stroke: {
+      width: 3,
+    },
+  };
+  const series = [
+    {
+      data: data?.map((price) => {
+        return {
+          x: price.time_close,
+          y: [
+            price.open.toFixed(3),
+            price.high.toFixed(3),
+            price.low.toFixed(3),
+            price.close.toFixed(3),
+          ],
+        };
+      }),
+    },
+  ];
+
   return (
     <div>
       {isLoading ? (
         "Loading chart..."
       ) : (
         <ApexChart
-          type="line"
-          series={[
-            {
-              name: coinId,
-              data: data?.map((price) => price.close),
-            },
-          ]}
-          options={{
-            theme: {
-              mode: "dark",
-            },
-            chart: {
-              height: 500,
-              width: 500,
-              toolbar: {
-                show: false,
-              },
-              background: "transparent",
-            },
-            grid: { show: false },
-            xaxis: {
-              categories: data?.map((time) => time.time_open),
-              type: "datetime",
-              labels: {
-                show: false,
-              },
-              axisTicks: { show: false },
-              axisBorder: { show: false },
-            },
-            yaxis: {
-              show: false,
-            },
-            fill: {
-              type: "gradient",
-              gradient: { gradientToColors: ["#0be881"], stops: [0, 100] },
-            },
-            colors: ["#0fbcf9"],
-            tooltip: {
-              y: {
-                formatter: (value) => `$${value.toFixed(2)}`,
-              },
-            },
-            stroke: {
-              curve: "smooth",
-              width: 3,
-            },
-          }}
+          type="candlestick"
+          height={350}
+          series={series}
+          options={options}
         />
       )}
     </div>

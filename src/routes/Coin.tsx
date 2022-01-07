@@ -18,6 +18,7 @@ import Price from "./Price";
 const Title = styled.h1`
   color: ${(props) => props.theme.accentColor};
   font-size: 48px;
+  margin-right: 50px;
 `;
 
 const Loader = styled.span`
@@ -34,7 +35,7 @@ const Container = styled.div`
 const Header = styled.header`
   height: 10vh;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
 `;
 
@@ -88,11 +89,9 @@ const Tab = styled.span<{ isActive: boolean }>`
 `;
 
 const PrevBtn = styled.div`
-  position: sticky;
-  top: 7.5%;
-  margin-left: 10px;
   font-size: 2rem;
   color: ${(props) => props.theme.textColor};
+  margin-left: 10px;
 `;
 
 interface IInfoData {
@@ -201,15 +200,16 @@ function Coin() {
           </title>
         </Helmet>
       </HelmetProvider>
-      <PrevBtn>
-        <Link to={"/"}>
-          <FontAwesomeIcon icon={faArrowCircleLeft} />
-        </Link>
-      </PrevBtn>
       <Header>
+        <PrevBtn>
+          <Link to={"/"}>
+            <FontAwesomeIcon icon={faArrowCircleLeft} />
+          </Link>
+        </PrevBtn>
         <Title>
           {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
         </Title>
+        <div></div>
       </Header>
       {loading ? (
         <Loader>Loading...</Loader>
