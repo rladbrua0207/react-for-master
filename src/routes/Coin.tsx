@@ -169,6 +169,7 @@ function Coin() {
       refetchInterval: 5000,
     }
   );
+  console.log(state);
 
   //match가 우리가 coinId/price 라는 URL에 있는지 확인
 
