@@ -34,6 +34,7 @@ interface IForm {
   lastName: string;
   password: string;
   password1: string;
+  extraError?: string;
 }
 
 function ToDoList() {
@@ -41,6 +42,7 @@ function ToDoList() {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
   } = useForm<IForm>({
     defaultValues: {
       email: "@naver.com",
@@ -48,8 +50,15 @@ function ToDoList() {
   });
 
   //react-hook-form이 모든 validation을 다 마쳤을 때만 호출
-  const onValid = (data: any) => {
-    console.log(data);
+  const onValid = (data: IForm) => {
+    if (data.password !== data.password1) {
+      setError(
+        "password1",
+        { message: "Password are not the same" },
+        { shouldFocus: true }
+      );
+    }
+    //setError("extraError", { message: "Server offline" });
   };
 
   console.log(errors);
@@ -77,14 +86,28 @@ function ToDoList() {
           {...register("username", { required: true })}
           placeholder="username"
         />
+        <span>{errors?.username?.message}</span>
+
         <input
-          {...register("firstName", { required: true })}
+          {...register("firstName", {
+            required: true,
+            validate: {
+              noNico: (value) =>
+                value.includes("nico") ? "no nico allowed" : true,
+              noNick: (value) =>
+                value.includes("nick") ? "no nick allowed" : true,
+            },
+          })} // value가 nico, nick를 포함한다면 false
           placeholder="firstName"
         />
+        <span>{errors?.firstName?.message}</span>
+
         <input
           {...register("lastName", { required: true })}
           placeholder="lastName"
         />
+        <span>{errors?.lastName?.message}</span>
+
         <input
           {...register("password", {
             required: "Password is required",
@@ -92,6 +115,8 @@ function ToDoList() {
           })}
           placeholder="password"
         />
+        <span>{errors?.password?.message}</span>
+
         {/* required: "message", minLength:{value:? message:"message"} 
         error객체에 message 전달*/}
         <input
@@ -101,8 +126,11 @@ function ToDoList() {
           })}
           placeholder="password1"
         />
+        <span>{errors?.password1?.message}</span>
+
         {/* register 함수가 반환하는 객체를 가져다가 input에 props로 주는거 */}
         <button>Add</button>
+        <span>{errors?.extraError?.message}</span>
       </form>
     </div>
   );
