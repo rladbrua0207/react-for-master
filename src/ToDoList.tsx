@@ -1,17 +1,34 @@
-import React, { SelectHTMLAttributes } from "react";
-import { selector, useRecoilState, useRecoilValue } from "recoil";
-import { Categories, categoryState, IToDo, toDoSelector } from "./atoms";
+import React, { SelectHTMLAttributes, useEffect } from "react";
+import {
+  selector,
+  useRecoilState,
+  useRecoilValue,
+  useSetRecoilState,
+} from "recoil";
+import {
+  Categories,
+  categoryState,
+  IToDo,
+  toDoSelector,
+  toDoState,
+} from "./atoms";
 import CreateToDo from "./CreateToDo";
 import ToDo from "./ToDo";
 
 function ToDoList() {
-  const toDos = useRecoilValue(toDoSelector); //3개의 배열 return
+  const toDosSelector = useRecoilValue(toDoSelector);
   const [category, setCategory] = useRecoilState(categoryState);
   const onInput = (event: React.FormEvent<HTMLSelectElement>) => {
     setCategory(event.currentTarget.value as any);
   };
+  const setToDos = useSetRecoilState(toDoState);
 
-  console.log(category);
+  useEffect(() => {
+    (async () => {})();
+    setToDos(JSON.parse(localStorage.getItem("ToDos") as string));
+  }, []);
+
+  console.log(toDosSelector);
   return (
     <div>
       <h1>To Dos</h1>
@@ -24,7 +41,7 @@ function ToDoList() {
       <CreateToDo />
       <h2>To Do</h2>
 
-      {toDos?.map((aToDo) => (
+      {toDosSelector?.map((aToDo) => (
         <ToDo key={aToDo.id} {...aToDo} />
       ))}
     </div>

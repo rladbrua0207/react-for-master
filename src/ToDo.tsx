@@ -1,5 +1,6 @@
 import React, { ButtonHTMLAttributes } from "react";
 import { useSetRecoilState } from "recoil";
+import { json } from "stream/consumers";
 import { Categories, IToDo, toDoState } from "./atoms";
 
 function ToDo({ text, category, id }: IToDo) {
@@ -7,10 +8,16 @@ function ToDo({ text, category, id }: IToDo) {
   const handleDelete = () => {
     setToDos((oldToDos) => {
       const targetIndex = oldToDos.findIndex((toDo) => toDo.id === id);
-      return [
-        ...oldToDos.slice(0, targetIndex),
-        ...oldToDos.slice(targetIndex + 1),
-      ];
+
+      localStorage.setItem(
+        "ToDos",
+        JSON.stringify([
+          ...oldToDos.slice(0, targetIndex),
+          ...oldToDos.slice(targetIndex + 1),
+        ])
+      );
+
+      return JSON.parse(localStorage.getItem("ToDos") as string);
     });
   };
 
@@ -18,11 +25,16 @@ function ToDo({ text, category, id }: IToDo) {
     setToDos((oldToDos) => {
       const targetIndex = oldToDos.findIndex((toDo) => toDo.id === id);
       const newToDo = { text, id, category: newCategory };
-      return [
-        ...oldToDos.slice(0, targetIndex),
-        newToDo,
-        ...oldToDos.slice(targetIndex + 1),
-      ];
+      localStorage.setItem(
+        "ToDos",
+        JSON.stringify([
+          ...oldToDos.slice(0, targetIndex),
+          newToDo,
+          ...oldToDos.slice(targetIndex + 1),
+        ])
+      );
+
+      return JSON.parse(localStorage.getItem("ToDos") as string);
     });
   };
   return (
