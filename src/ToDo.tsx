@@ -1,8 +1,19 @@
+import React, { ButtonHTMLAttributes } from "react";
 import { useSetRecoilState } from "recoil";
 import { Categories, IToDo, toDoState } from "./atoms";
 
 function ToDo({ text, category, id }: IToDo) {
   const setToDos = useSetRecoilState(toDoState);
+  const handleDelete = () => {
+    setToDos((oldToDos) => {
+      const targetIndex = oldToDos.findIndex((toDo) => toDo.id === id);
+      return [
+        ...oldToDos.slice(0, targetIndex),
+        ...oldToDos.slice(targetIndex + 1),
+      ];
+    });
+  };
+
   const onClick = (newCategory: IToDo["category"]) => {
     setToDos((oldToDos) => {
       const targetIndex = oldToDos.findIndex((toDo) => toDo.id === id);
@@ -26,6 +37,7 @@ function ToDo({ text, category, id }: IToDo) {
       {category !== Categories.DONE && (
         <button onClick={() => onClick(Categories.DONE)}>Done</button>
       )}
+      <button onClick={handleDelete}>Delete</button>
     </li>
   );
 }
