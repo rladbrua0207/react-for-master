@@ -39,15 +39,26 @@ const Boards = styled.div`
   width: 100%;
 `;
 
-const toDos = ["a", "b", "c", "d", "e", "f"];
-
 function App() {
-  const onDragEnd = ({ destination, source }: DropResult) => {
-    console.log("destination", destination);
-    console.log("source", source);
+  const [toDos, setToDos] = useRecoilState(todoState);
+  const onDragEnd = ({ draggableId, destination, source }: DropResult) => {
+    if (!destination) return;
+    setToDos((oldToDos) => {
+      const toDosCopy = [...oldToDos];
+      // 1) Delete item on source.index
+      console.log("Delete item on", source.index);
+      console.log(toDosCopy);
+      toDosCopy.splice(source.index, 1);
+      console.log("Deleted item");
+      console.log(toDosCopy);
+      // 2) Put back the item on the destination.index
+      toDosCopy.splice(destination.index, 0, draggableId);
+      console.log("Put  back", draggableId, "on", destination.index);
+      console.log(toDosCopy);
+      return toDosCopy;
+    });
   };
 
-  const [toDos, setToDos] = useRecoilState(todoState);
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Wrapper>
@@ -56,7 +67,7 @@ function App() {
             {(provided) => (
               <Board ref={provided.innerRef} {...provided.droppableProps}>
                 {toDos.map((toDo, index) => (
-                  <Draggable key={index} draggableId={toDo} index={index}>
+                  <Draggable key={toDo} draggableId={toDo} index={index}>
                     {(provided) => (
                       <Card
                         ref={provided.innerRef}
@@ -68,6 +79,7 @@ function App() {
                     )}
                   </Draggable>
                 ))}
+                {provided.placeholder}
               </Board>
             )}
           </Droppable>
